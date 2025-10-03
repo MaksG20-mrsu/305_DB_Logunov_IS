@@ -69,7 +69,7 @@ def generate_tags(writer):
     with open(FILES["tags"], encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
-        for idx, row in enumerate(reader, start=1):  # генерируем id сами
+        for idx, row in enumerate(reader, start=1):
             user_id, movie_id, tag, ts = row
             writer.write(f"INSERT INTO tags (id, user_id, movie_id, tag, timestamp) "
                 f"VALUES ({idx}, {user_id}, {movie_id}, '{escape(tag)}', '{ts}');\n")
