@@ -129,4 +129,4 @@ def main():
     print(f"db_init.sql создан в {output_path}")
 
 if __name__ == "__main__":
-    main()
+    main() 
