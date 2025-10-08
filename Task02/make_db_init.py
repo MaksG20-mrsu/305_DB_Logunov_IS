@@ -31,15 +31,20 @@ def generate_movies(writer):
         year INTEGER,
         genres TEXT
     );\n""")
+    
     with open(FILES["movies"], encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
+        values = []
         for row in reader:
             movie_id, title, genres = row
             clean_title, year = extract_year(title)
             year_sql = year if year else "NULL"
-            writer.write(f"INSERT INTO movies (id, title, year, genres) "
-                f"VALUES ({movie_id}, '{escape(clean_title)}', {year_sql}, '{escape(genres)}');\n")
+            values.append(f"({movie_id}, '{escape(clean_title)}', {year_sql}, '{escape(genres)}')")
+        
+        writer.write("INSERT INTO movies (id, title, year, genres) VALUES\n")
+        writer.write(",\n".join(values))
+        writer.write(";\n\n")
 
 def generate_ratings(writer):
     writer.write("DROP TABLE IF EXISTS ratings;\n")
@@ -50,13 +55,19 @@ def generate_ratings(writer):
         rating REAL,
         timestamp TEXT
     );\n""")
+    
     with open(FILES["ratings"], encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
+        values = []
         for idx, row in enumerate(reader, start=1):
             user_id, movie_id, rating, ts = row
-            writer.write(f"INSERT INTO ratings (id, user_id, movie_id, rating, timestamp) "
-                f"VALUES ({idx}, {user_id}, {movie_id}, {rating}, '{ts}');\n")
+            values.append(f"({idx}, {user_id}, {movie_id}, {rating}, '{ts}')")
+        
+        writer.write("INSERT INTO ratings (id, user_id, movie_id, rating, timestamp) VALUES\n")
+        writer.write(",\n".join(values))
+        writer.write(";\n\n")
+
 def generate_tags(writer):
     writer.write("DROP TABLE IF EXISTS tags;\n")
     writer.write("""CREATE TABLE tags (
@@ -66,13 +77,18 @@ def generate_tags(writer):
         tag TEXT,
         timestamp TEXT
     );\n""")
+    
     with open(FILES["tags"], encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
+        values = []
         for idx, row in enumerate(reader, start=1):
             user_id, movie_id, tag, ts = row
-            writer.write(f"INSERT INTO tags (id, user_id, movie_id, tag, timestamp) "
-                f"VALUES ({idx}, {user_id}, {movie_id}, '{escape(tag)}', '{ts}');\n")
+            values.append(f"({idx}, {user_id}, {movie_id}, '{escape(tag)}', '{ts}')")
+        
+        writer.write("INSERT INTO tags (id, user_id, movie_id, tag, timestamp) VALUES\n")
+        writer.write(",\n".join(values))
+        writer.write(";\n\n")
 
 def generate_users(writer):
     writer.write("DROP TABLE IF EXISTS users;\n")
@@ -84,6 +100,8 @@ def generate_users(writer):
         register_date TEXT,
         occupation TEXT
     );\n""")
+    
+    values = []
     with open(FILES["users"], encoding="utf-8") as f:
         for i, line in enumerate(f, 1):
             row = line.strip().split("|")
@@ -93,12 +111,13 @@ def generate_users(writer):
             u_id, name, email, gender, reg_date, occupation = row
 
             if '\n' in name or '\r' in name or '\n' in occupation:
-                print(f"❗️ Строка {i}: найден \\n или \\r в данных: {name!r}, {occupation!r}")
+                print(f"Строка {i}: найден \\n или \\r в данных: {name!r}, {occupation!r}")
 
-            sql = (f"INSERT INTO users (id, name, email, gender, register_date, occupation) "
-                f"VALUES ({u_id}, '{escape(name)}', '{escape(email)}', '{gender}', '{reg_date}', '{escape(occupation)}');\n")
-            print(f"Строка {i} SQL: {sql[:]}")
-            writer.write(sql)
+            values.append(f"({u_id}, '{escape(name)}', '{escape(email)}', '{gender}', '{reg_date}', '{escape(occupation)}')")
+    
+    writer.write("INSERT INTO users (id, name, email, gender, register_date, occupation) VALUES\n")
+    writer.write(",\n".join(values))
+    writer.write(";\n\n")
 
 def main():
     output_path = os.path.join(BASE_PATH, "db_init.sql")
